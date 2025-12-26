@@ -1,20 +1,23 @@
 #include <ncurses.h>
 #include <stdio.h>
 
-#define DELAY_LOWEST 20
-#define DELAY_HIGHEST 200
-#define DELAY_STEP 10
+#define DELAY_LOWEST 20    // Наименьшая задержка
+#define DELAY_HIGHEST 200  // Наибольшая задержка
+#define DELAY_STEP 10      // Шаг задержки
 
-#define ROWS 25
-#define COLUMNS 80
+#define ROWS 25     // Колонки поля
+#define COLUMNS 80  // Ряды поля
 
-#define STATES_AMOUNT 5
+#define STATES_AMOUNT 5  // Кол-во начальных состояний
 
-// Считывание начального состояния
-void read_initial_state(int field[ROWS][COLUMNS]);
+// Считывание состояния из потока ввода
+void read_from_input(int field[ROWS][COLUMNS]);
 
-// Меню выбора начального состояния
-int start_menu(int field[ROWS][COLUMNS], int choice);
+// Считывание состояния из файла
+int read_from_file(int field[ROWS][COLUMNS], int choice);
+
+// Вывод начального меню
+int start_menu(int field[ROWS][COLUMNS]);
 
 // Вывод кадра игры
 void print_game(int field[ROWS][COLUMNS], int counter, int delay);
@@ -29,27 +32,12 @@ void advance_game_state(int previous_field[ROWS][COLUMNS], int field[ROWS][COLUM
 int count_neighbours(int previous_field[ROWS][COLUMNS], int y, int x);
 
 int main() {
-    int counter = 0, delay = 50;
-
     int previous_field[ROWS][COLUMNS], field[ROWS][COLUMNS];
-    // read_initial_state(field);
+    // read_from_input(field);
 
-    printf("Choose a starting configuration (1-%d): ", STATES_AMOUNT);
-
-    int choice;
-    if (scanf("%d", &choice) != 1 || choice < 1 || choice > STATES_AMOUNT) {
-        printf("Invalid input. Please enter a number between 1 and %d.\n", STATES_AMOUNT);
+    if (start_menu(field) == 1) {
         return 1;
     }
-
-    // Загрузка данных из файла
-    if (start_menu(field, choice) == 1) {
-        printf("Error: Could not open file %d.txt\n", choice);
-        return 1;
-    }
-
-    // Считываем начальное состояние
-    int start_menu(int field[ROWS][COLUMNS], int choice);
 
     // Перенаправляем стандартный поток ввода обратно из консоли для считывания клавиш
     if (freopen("/dev/tty", "r", stdin) == NULL) {
@@ -59,6 +47,7 @@ int main() {
     // Инициализация ncurses
     initscr();
 
+    // Инициализация цветов
     if (has_colors() == FALSE) {
         endwin();
         printf("This terminal doesn't support color'\n");
@@ -66,12 +55,13 @@ int main() {
     }
     start_color();
 
-    cbreak();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, TRUE);
-    nodelay(stdscr, TRUE);
+    cbreak();     // Посимвольное считывание
+    noecho();     // Отключение отображения введённых символов
+    curs_set(0);  // Скрытие курсора
+    keypad(stdscr, TRUE);  // Обработка специальных клавиш (F1, Home, стрелки и т. д.)
+    nodelay(stdscr, TRUE);  // Неблокирующий ввод
 
+    int counter = 0, delay = 50;
     print_game(field, counter, delay);
 
     while (1) {
@@ -84,17 +74,68 @@ int main() {
         napms(delay);
     }
 
-    endwin();
+    endwin();  // Завершение ncurses
 
     return 0;
 }
 
-void read_initial_state(int field[ROWS][COLUMNS]) {
+int start_menu(int field[ROWS][COLUMNS]) {
+    int choice, scanf_flag;
+    do {
+        printf("Choose a starting configuration (1-%d): ", STATES_AMOUNT);
+
+        scanf_flag = scanf("%d", &choice);
+        
+        if (scanf_flag != 1) {
+        printf("Invalid input. Please enter a number.\n");
+
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF)
+            ;
+        } else if (choice < 1 || choice > STATES_AMOUNT) {
+            printf("Invalid input. Please enter a number between 1 and %d.\n", STATES_AMOUNT);
+        }
+    } while (scanf_flag != 1 || choice < 1 || choice > STATES_AMOUNT);
+
+    // Загрузка данных из файла
+    int flag = 0;
+    if (read_from_file(field, choice) == 1) {
+        printf("Error: Could not open file %d.txt\n", choice);
+        flag = 1;
+    }
+
+    return flag;
+}
+
+void read_from_input(int field[ROWS][COLUMNS]) {
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLUMNS; j++) {
             if (scanf("%d", &field[i][j]) != 1) break;
         }
     }
+}
+
+int read_from_file(int field[ROWS][COLUMNS], int choice) {
+    int flag = 0;
+
+    char filename[20];
+    sprintf(filename, "./datasets/%d.txt", choice);  // Формируем имя: "1.txt", "2.txt" и т.д.
+
+    FILE* file = fopen(filename, "r");
+    if (!file) flag = 1;
+
+    if (flag != 1) {
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLUMNS; j++) {
+                if (fscanf(file, "%d", &field[i][j]) != 1) {
+                    field[i][j] = 0;  // Заполняем нулями, если файл битый
+                }
+            }
+        }
+    }
+
+    if (flag != 1) fclose(file);
+    return flag;
 }
 
 void print_game(int field[ROWS][COLUMNS], int counter, int delay) {
@@ -232,27 +273,4 @@ int count_neighbours(int previous_field[ROWS][COLUMNS], int y, int x) {
     }
 
     return result;
-}
-
-int start_menu(int field[ROWS][COLUMNS], int choice) {
-    int flag = 0;
-
-    char filename[20];
-    sprintf(filename, "./datasets/%d.txt", choice);  // Формируем имя: "1.txt", "2.txt" и т.д.
-
-    FILE* file = fopen(filename, "r");
-    if (!file) flag = 1;
-
-    if (flag != 1) {
-        for (int i = 0; i < ROWS; i++) {
-            for (int j = 0; j < COLUMNS; j++) {
-                if (fscanf(file, "%d", &field[i][j]) != 1) {
-                    field[i][j] = 0;  // Заполняем нулями, если файл битый
-                }
-            }
-        }
-    }
-
-    if (flag != 1) fclose(file);
-    return flag;
 }
