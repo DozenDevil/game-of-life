@@ -60,7 +60,7 @@ int main() {
     // Инициализация цветов
     if (has_colors() == FALSE) {
         endwin();
-        printf("This terminal doesn't support color'\n");
+        printf("This terminal doesn't support colors\n");
         return 1;
     }
     start_color();
@@ -246,6 +246,9 @@ void print_game(int field[ROWS][COLUMNS], int counter, int delay) {
     const char ALIVE_CELL = ' ';
     const char DEAD_CELL = ' ';
 
+    // Кол-во цветов клеток (включая мёртвые), устанавливается вручную
+    const int COLORS_AMOUNT = 5;
+
     // Цвет мёртвой клетки
     init_pair(1, COLOR_BLACK, COLOR_BLACK);
 
@@ -255,35 +258,43 @@ void print_game(int field[ROWS][COLUMNS], int counter, int delay) {
     // Цвет живой клетки (возраст 2)
     init_pair(3, COLOR_YELLOW, COLOR_YELLOW);
 
+    // Переопределяем пурпурный цвет в оранжевый, если можем
+    if (can_change_color() == TRUE) {
+        init_color(COLOR_MAGENTA, 1000, 700, 0);
+    }
+
     // Цвет живой клетки (возраст 3)
-    init_pair(4, COLOR_RED, COLOR_RED);
+    init_pair(4, COLOR_MAGENTA, COLOR_MAGENTA);
+    
+    // Цвет живой клетки (возраст 4)
+    init_pair(5, COLOR_RED, COLOR_RED);
 
     // Цвет границы
-    init_pair(5, COLOR_CYAN, COLOR_BLACK);
+    init_pair(6, COLOR_WHITE, COLOR_BLACK);
 
     // Цвет текста
-    init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(7, COLOR_CYAN, COLOR_BLACK);
 
     clear();
 
     // Верхняя граница
-    attron(COLOR_PAIR(5));
+    attron(COLOR_PAIR(6));
     printw("%c", BORDER_CORNER);
 
     for (int j = 0; j < COLUMNS; j++) printw("%c", BORDER_HORIZONTAL);
 
     printw("%c\n", BORDER_CORNER);
-    attroff(COLOR_PAIR(5));
+    attroff(COLOR_PAIR(6));
 
     // Вывод поля
     for (int i = 0; i < ROWS; i++) {
-        attron(COLOR_PAIR(5));
+        attron(COLOR_PAIR(6));
         printw("%c", BORDER_VERTICAL);  // Левая граница
-        attroff(COLOR_PAIR(5));
+        attroff(COLOR_PAIR(6));
 
         for (int j = 0; j < COLUMNS; j++) {
             // Указываем цвет клетки в зависимости от её возраста
-            attron(COLOR_PAIR((field[i][j] <= 3) ? field[i][j] + 1 : 4));
+            attron(COLOR_PAIR((field[i][j] <= COLORS_AMOUNT - 1) ? field[i][j] + 1 : COLORS_AMOUNT));
 
             // Выводим символ мёртвой или живой клетки
             if (field[i][j] == 0)
@@ -291,31 +302,31 @@ void print_game(int field[ROWS][COLUMNS], int counter, int delay) {
             else
                 printw("%c", ALIVE_CELL);
 
-            attroff(COLOR_PAIR((field[i][j] <= 3) ? field[i][j] + 1 : 4));
+            attroff(COLOR_PAIR((field[i][j] <= COLORS_AMOUNT - 1) ? field[i][j] + 1 : COLORS_AMOUNT));
         }
 
-        attron(COLOR_PAIR(5));
+        attron(COLOR_PAIR(6));
         printw("%c\n", BORDER_VERTICAL);  // Правая граница
-        attroff(COLOR_PAIR(5));
+        attroff(COLOR_PAIR(6));
     }
 
     // Нижняя граница
-    attron(COLOR_PAIR(5));
+    attron(COLOR_PAIR(6));
     printw("%c", BORDER_CORNER);
 
     for (int j = 0; j < COLUMNS; j++) printw("%c", BORDER_HORIZONTAL);
 
     printw("%c\n", BORDER_CORNER);
-    attroff(COLOR_PAIR(5));
+    attroff(COLOR_PAIR(6));
 
     // Вывод текста интерфейса
-    attron(COLOR_PAIR(6));
+    attron(COLOR_PAIR(7));
     printw("The loop is running. Press A/Z to increase/decrease speed. Press Q or Space to quit.\n\n");
 
     printw("Generation # %d\n", counter);
 
     printw("Delay: %d ms", delay);
-    attroff(COLOR_PAIR(6));
+    attroff(COLOR_PAIR(7));
 
     refresh();
 }
