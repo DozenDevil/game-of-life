@@ -33,7 +33,8 @@
 4. Отредактируйте содержимое, задав живые (1) и мёртвые (0) клетки.
 5. После данных игрового поля можно указать любую дополнительную информацию — она не будет считываться при корректных размерах поля.
 
-> [!WARNING] Все примеры рассчитаны на размер поля **25×80**. При изменении размеров поле должно соответствовать новым размерам.
+> [!WARNING]
+> Все примеры рассчитаны на размер поля **25×80**. При изменении размеров поле должно соответствовать новым размерам.
 
 ## Подготовка среды Linux
 
@@ -44,7 +45,9 @@
 
 Для Windows рекомендуется использовать WSL и VS Code:
 
-> [!NOTE] Запуск напрямую в Windows без WSL не поддерживается из-за зависимости от `ncurses`. Подробнее: [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), [VS Code](https://code.visualstudio.com/docs/setup/windows), [WSL + VS Code tutorial](https://code.visualstudio.com/docs/remote/wsl-tutorial).
+> [!NOTE]
+> Запуск напрямую в Windows без WSL не поддерживается из-за зависимости от `ncurses`.
+> Подробнее: [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), [VS Code](https://code.visualstudio.com/docs/setup/windows), [WSL + VS Code tutorial](https://code.visualstudio.com/docs/remote/wsl-tutorial).
 
 Дополнительно можно установить инструменты для проверки кода:
 
@@ -67,7 +70,8 @@ cppcheck --enable=all *.c
 valgrind ./game_of_life
 ```
 
-> [!TIP] Проверки не обязательны для сборки, но полезны при доработке кода.
+> [!TIP]
+> Проверки не обязательны для сборки, но полезны при доработке кода.
 
 ## Возможности
 
@@ -82,7 +86,8 @@ valgrind ./game_of_life
 
 Для компиляции используйте Makefile или gcc с `ncurses`.
 
-> [!IMPORTANT] Makefile предполагает `ncurses` в стандартных путях; при нестандартном расположении настройте `LDFLAGS`.
+> [!IMPORTANT]
+> Makefile предполагает `ncurses` в стандартных путях; при нестандартном расположении настройте `LDFLAGS`.
 
 ### Сборка с Makefile
 
@@ -100,7 +105,8 @@ gcc game_of_life.c -o game_of_life -lncurses
 
 ## Запуск
 
-> [!CAUTION] Не запускайте в терминалах без поддержки управления экраном.
+> [!CAUTION]
+> Не запускайте в терминалах без поддержки управления экраном.
 
 ```bash
 ./game_of_life
